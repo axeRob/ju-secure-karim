@@ -46,8 +46,16 @@ Fonts are bundled locally; no font service or API credentials are required. This
 
 ## GitHub Pages
 
-The Vite base path is `/ju-secure-karim/`. `.github/workflows/deploy-pages.yml` installs locked dependencies with Node 24, builds the app, and deploys `dist/` to GitHub Pages on every push to `main`. It can also be run manually.
+The Vite base path is `/ju-secure-karim/`. `.github/workflows/deploy-pages.yml` installs locked dependencies with Node 24, builds the app, and publishes the contents of `dist/` to the root of the `gh-pages` branch on every push to `main`. It can also be run manually. The publishing action adds `.nojekyll` so GitHub serves the built files directly.
 
-In [repository Settings → Pages](https://github.com/axeRob/ju-secure-karim/settings/pages), choose **Build and deployment → Source → GitHub Actions**. A branch or `/docs` folder is not required. If the first workflow run failed before Pages was enabled, open **Actions → Deploy to GitHub Pages → Run workflow**, select `main`, and run it again.
+After the workflow creates `gh-pages`, open [repository Settings → Pages](https://github.com/axeRob/ju-secure-karim/settings/pages). Under **Build and deployment**, select:
 
-After the workflow succeeds, the site will be available at **https://axerob.github.io/ju-secure-karim/**. No custom secrets are required; deployment uses GitHub's workflow token and OIDC permissions.
+- **Source:** Deploy from a branch
+- **Branch:** gh-pages
+- **Folder:** /(root)
+
+Click **Save**. To publish the branch manually, open **Actions → Deploy to GitHub Pages → Run workflow**, select `main`, and run it.
+
+After GitHub's Pages deployment succeeds, the site will be available at **https://axerob.github.io/ju-secure-karim/**. No Personal Access Token or custom secrets are required: branch publishing uses the automatically supplied `GITHUB_TOKEN` with `contents: write`.
+
+Publishing `gh-pages` and deploying the live Pages site are separate operations. GitHub documents that commits pushed with `GITHUB_TOKEN` do not trigger a Pages build automatically. Select and save the branch source for the first deployment, and check the separate Pages deployment before assuming the live site reflects later branch updates.
