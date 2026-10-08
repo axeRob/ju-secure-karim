@@ -4,7 +4,15 @@ export type AccountKind =
   | "google"
   | "spotify"
   | "linkedin"
-  | "github";
+  | "github"
+  | "microsoft"
+  | "discord"
+  | "netflix"
+  | "instagram"
+  | "reddit"
+  | "steam"
+  | "canvas"
+  | "generic";
 export type AccountStatus = "safe" | "reused" | "weak";
 
 export interface Account {
@@ -65,6 +73,62 @@ export const seedAccounts: Account[] = [
     kind: "github",
     password: "demo123",
     status: "weak",
+  },
+  {
+    id: "microsoft",
+    name: "Microsoft",
+    username: "karim.study@example.com",
+    kind: "microsoft",
+    password: "Demo-MS!6p2W8r4",
+    status: "safe",
+  },
+  {
+    id: "discord",
+    name: "Discord",
+    username: "karim.study.demo",
+    kind: "discord",
+    password: "Demo-Social!9m3",
+    status: "reused",
+  },
+  {
+    id: "netflix",
+    name: "Netflix",
+    username: "karim.stream@example.com",
+    kind: "netflix",
+    password: "Demo-Social!9m3",
+    status: "reused",
+  },
+  {
+    id: "instagram",
+    name: "Instagram",
+    username: "karim.campus.demo",
+    kind: "instagram",
+    password: "Demo-IG!3t8R6n2",
+    status: "safe",
+  },
+  {
+    id: "reddit",
+    name: "Reddit",
+    username: "karim_reads_demo",
+    kind: "reddit",
+    password: "demo456",
+    status: "weak",
+  },
+  {
+    id: "steam",
+    name: "Steam",
+    username: "karim_plays_demo",
+    kind: "steam",
+    password: "Demo-ST!5q7M2v8",
+    status: "safe",
+  },
+  {
+    id: "canvas",
+    name: "Canvas",
+    username: "karim.study@example.com",
+    kind: "canvas",
+    password: "Demo-CV!9k4P7x3",
+    status: "safe",
   },
 ];
 

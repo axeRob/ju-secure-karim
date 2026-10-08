@@ -14,7 +14,16 @@ function inferKind(name: string): AccountKind {
   if (lower.includes("google")) return "google";
   if (lower.includes("linkedin")) return "linkedin";
   if (lower.includes("github")) return "github";
-  return "university";
+  if (lower.includes("microsoft")) return "microsoft";
+  if (lower.includes("discord")) return "discord";
+  if (lower.includes("netflix")) return "netflix";
+  if (lower.includes("instagram")) return "instagram";
+  if (lower.includes("reddit")) return "reddit";
+  if (lower.includes("steam")) return "steam";
+  if (lower.includes("canvas")) return "canvas";
+  if (/^ju\b/.test(lower.trim()) || lower.includes("university"))
+    return "university";
+  return "generic";
 }
 
 /** In-memory only. Refreshing the prototype discards every demo change. */

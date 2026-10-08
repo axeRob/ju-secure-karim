@@ -12,6 +12,9 @@ import {
   EyeOff,
   Fingerprint,
   Github,
+  Gamepad2,
+  GraduationCap,
+  Instagram,
   KeyRound,
   LockKeyhole,
   Plus,
@@ -35,9 +38,39 @@ import { useDemo } from "./useDemo";
 
 type Tab = "vault" | "security" | "generator" | "settings";
 type Overlay =
-  | { kind: "fix" | "account"; accountId: string; password: string }
-  | { kind: "success"; accountId: string; clearedCompanion?: string }
-  | { kind: "add" };
+  | { kind: "fix"; accountId: string; password: string }
+  | { kind: "account"; accountId: string }
+  | {
+      kind: "success";
+      accountId: string;
+      clearedCompanion?: string;
+      fixedStatus: "reused" | "weak";
+    }
+  | { kind: "add"; password: string };
+
+type ToastMessage = { message: string; type: "success" | "error" };
+
+function Toast({
+  toast,
+  inSheet = false,
+}: {
+  toast: ToastMessage;
+  inSheet?: boolean;
+}) {
+  return (
+    <div
+      className={`${inSheet ? "sheet-toast" : "toast"} ${toast.type === "error" ? "toast-error" : ""}`}
+      role="status"
+    >
+      {toast.type === "error" ? (
+        <AlertTriangle size={17} />
+      ) : (
+        <CheckCheck size={17} />
+      )}
+      {toast.message}
+    </div>
+  );
+}
 
 function Button({
   children,
@@ -93,9 +126,28 @@ function AccountIcon({
         <Github size={large ? 27 : 21} />
       ) : account.kind === "linkedin" ? (
         <span className="linkedin-in">in</span>
-      ) : (
+      ) : account.kind === "university" ? (
         <span className="ju-mark">
           JU<span>•</span>
+        </span>
+      ) : account.kind === "microsoft" ? (
+        <span className="microsoft-mark">
+          <span />
+          <span />
+          <span />
+          <span />
+        </span>
+      ) : account.kind === "instagram" ? (
+        <Instagram size={large ? 27 : 21} />
+      ) : account.kind === "steam" || account.kind === "discord" ? (
+        <Gamepad2 size={large ? 27 : 21} />
+      ) : account.kind === "canvas" ? (
+        <GraduationCap size={large ? 27 : 21} />
+      ) : (
+        <span className="account-monogram">
+          {account.kind === "reddit"
+            ? "r/"
+            : account.name.trim().charAt(0).toUpperCase()}
         </span>
       )}
     </span>
@@ -182,28 +234,47 @@ function PasswordField({
   password,
   onCopy,
   label = "NEW PASSWORD",
+  initialVisible = false,
+  onRegenerate,
 }: {
   password: string;
-  onCopy: (password: string) => void;
+  onCopy: (password: string, masked: boolean) => void;
   label?: string;
+  initialVisible?: boolean;
+  onRegenerate?: () => void;
 }) {
-  const [visible, setVisible] = useState(true);
+  const [visible, setVisible] = useState(initialVisible);
   return (
     <div className="password-box">
-      <span className="eyebrow">{label}</span>
+      <div className="password-label">
+        <span className="eyebrow">{label}</span>
+        {onRegenerate && (
+          <button
+            type="button"
+            className="icon-button"
+            aria-label="Regenerate password"
+            onClick={onRegenerate}
+          >
+            <RefreshCw size={16} />
+          </button>
+        )}
+      </div>
       <div className="password-line">
         <code>{visible ? password : "••••••••••••••••••"}</code>
         <button
+          type="button"
           className="icon-button"
           aria-label={visible ? "Hide password" : "Show password"}
+          aria-pressed={visible}
           onClick={() => setVisible(!visible)}
         >
           {visible ? <EyeOff size={18} /> : <Eye size={18} />}
         </button>
         <button
+          type="button"
           className="icon-button"
           aria-label="Copy password"
-          onClick={() => onCopy(password)}
+          onClick={() => onCopy(password, !visible)}
         >
           <Copy size={18} />
         </button>
@@ -240,7 +311,7 @@ export default function App() {
   const [query, setQuery] = useState("");
   const [attentionOnly, setAttentionOnly] = useState(false);
   const [overlay, setOverlay] = useState<Overlay | null>(null);
-  const [toast, setToast] = useState("");
+  const [toast, setToast] = useState<ToastMessage | null>(null);
   const [advanced, setAdvanced] = useState(false);
   const [autoLock, setAutoLock] = useState(true);
   const [reuseAlerts, setReuseAlerts] = useState(true);
@@ -258,7 +329,7 @@ export default function App() {
 
   useEffect(() => {
     if (!toast) return;
-    const timer = setTimeout(() => setToast(""), 3200);
+    const timer = setTimeout(() => setToast(null), 3200);
     return () => clearTimeout(timer);
   }, [toast]);
   useEffect(() => {
@@ -281,21 +352,32 @@ export default function App() {
     return () => document.removeEventListener("keydown", focusSearch);
   }, [overlay, demo.initialized]);
 
-  const copy = async (password: string) => {
+  const copy = async (password: string, masked = false) => {
     try {
       await navigator.clipboard.writeText(password);
-      setToast("Demo password copied");
+      setToast({ message: "Demo password copied", type: "success" });
     } catch {
-      setToast("Copy unavailable. Select the password to copy it.");
+      setToast({
+        message: masked
+          ? "Copy unavailable. Show the password to copy manually."
+          : "Copy unavailable. Select the password to copy it.",
+        type: "error",
+      });
     }
   };
 
-  const openAccount = (account: Account) =>
+  const openAccount = (account: Account) => {
+    setToast(null);
+    setOverlay({ kind: "account", accountId: account.id });
+  };
+  const openFix = (account: Account) => {
+    setToast(null);
     setOverlay({
-      kind: account.status === "safe" ? "account" : "fix",
+      kind: "fix",
       accountId: account.id,
       password: generateDemoPassword(),
     });
+  };
   const recommended =
     demo.accounts.find(
       (account) => account.id === "spotify" && account.status !== "safe",
@@ -323,7 +405,8 @@ export default function App() {
   const openAdd = () => {
     setAddName("");
     setAddUsername("");
-    setOverlay({ kind: "add" });
+    setToast(null);
+    setOverlay({ kind: "add", password: generateDemoPassword() });
   };
   const goToVault = () => {
     setOverlay(null);
@@ -417,7 +500,9 @@ export default function App() {
                 <div className="defaults-title">
                   <ShieldCheck size={17} />
                   <span>Already taken care of</span>
-                  <span className="mini-pill">ON</span>
+                  <span className="mini-pill">
+                    {autoLock && reuseAlerts ? "ON" : "CUSTOM"}
+                  </span>
                 </div>
                 <div className="defaults-grid">
                   <span>
@@ -425,7 +510,7 @@ export default function App() {
                     Private demo vault
                   </span>
                   <span>
-                    <Check size={14} />
+                    {autoLock ? <Check size={14} /> : <X size={14} />}
                     Auto-lock preset
                   </span>
                   <span>
@@ -516,7 +601,7 @@ export default function App() {
                       <span className="health-count">
                         {demo.counts.issues === 0
                           ? "Looking good"
-                          : `${demo.counts.issues} ${demo.counts.issues === 1 ? 'needs' : 'need'} attention`}
+                          : `${demo.counts.issues} ${demo.counts.issues === 1 ? "needs" : "need"} attention`}
                       </span>
                     </div>
                     <div className="health-stats">
@@ -576,7 +661,7 @@ export default function App() {
                           </p>
                         </div>
                       </div>
-                      <Button onClick={() => openAccount(vaultRecommendation)}>
+                      <Button onClick={() => openFix(vaultRecommendation)}>
                         Fix {vaultRecommendation.name} password
                         <ArrowRight size={17} />
                       </Button>
@@ -746,7 +831,7 @@ export default function App() {
                       </div>
                       <Button
                         onClick={() =>
-                          openAccount(
+                          openFix(
                             group.find((account) => account.id === "spotify") ??
                               group[0],
                           )
@@ -777,7 +862,7 @@ export default function App() {
                             <p>Too short. Easy to guess.</p>
                           </div>
                         </div>
-                        <Button secondary onClick={() => openAccount(account)}>
+                        <Button secondary onClick={() => openFix(account)}>
                           Strengthen {account.name}
                           <ArrowRight size={16} />
                         </Button>
@@ -1021,7 +1106,7 @@ export default function App() {
                       setNumbers(true);
                       setGeneratorPassword("Demo!K7mQ2vN9@rT4pL8x");
                       setTab("vault");
-                      setToast("Demo reset");
+                      setToast({ message: "Demo reset", type: "success" });
                     }}
                   >
                     <RefreshCw size={15} />
@@ -1047,6 +1132,7 @@ export default function App() {
                 key={id}
                 className={tab === id ? "nav-active" : ""}
                 aria-current={tab === id ? "page" : undefined}
+                aria-label={label}
                 onClick={() => setTab(id)}
               >
                 <span className="nav-icon">
@@ -1060,12 +1146,7 @@ export default function App() {
             ))}
           </nav>
         )}
-        {toast && (
-          <div className="toast" role="status">
-            <CheckCheck size={17} />
-            {toast}
-          </div>
-        )}
+        {toast && !overlay && <Toast toast={toast} />}
       </div>
       <p className="stage-footer">
         <span className="stage-dot" />A faster path to a safer vault.
@@ -1122,7 +1203,8 @@ export default function App() {
               </div>
               <PasswordField
                 password={overlay.password}
-                onCopy={(password) => void copy(password)}
+                initialVisible
+                onCopy={(password, masked) => void copy(password, masked)}
               />
               <p className="new-password-note">
                 <ShieldCheck size={14} />
@@ -1142,6 +1224,8 @@ export default function App() {
                     kind: "success",
                     accountId: selectedAccount.id,
                     clearedCompanion,
+                    fixedStatus:
+                      selectedAccount.status === "weak" ? "weak" : "reused",
                   });
                 }}
               >
@@ -1166,7 +1250,9 @@ export default function App() {
               <h2>
                 {selectedAccount.name} is
                 <br />
-                now unique.
+                {overlay.fixedStatus === "weak"
+                  ? "now stronger."
+                  : "now unique."}
               </h2>
               <p>New password saved to your demo vault.</p>
               <div className="success-receipt">
@@ -1210,16 +1296,48 @@ export default function App() {
               <PasswordField
                 password={selectedAccount.password}
                 label="DEMO PASSWORD"
-                onCopy={(password) => void copy(password)}
+                onCopy={(password, masked) => void copy(password, masked)}
               />
-              <div className="quiet-card">
-                <ShieldCheck size={18} />
-                <div>
-                  <strong>Strong and unique</strong>
-                  <p>No action needed.</p>
+              {selectedAccount.status === "safe" ? (
+                <div className="quiet-card">
+                  <ShieldCheck size={18} />
+                  <div>
+                    <strong>Strong and unique</strong>
+                    <p>No action needed.</p>
+                  </div>
                 </div>
-              </div>
-              <Button secondary onClick={() => setOverlay(null)}>
+              ) : (
+                <div
+                  className={`detail-status-note ${selectedAccount.status === "weak" ? "weak-text" : "reused-text"}`}
+                >
+                  <AlertTriangle size={16} />
+                  <p>
+                    {selectedAccount.status === "reused"
+                      ? `Shared with ${demo
+                          .getReuseGroup(selectedAccount.id)
+                          .filter(
+                            (account) => account.id !== selectedAccount.id,
+                          )
+                          .map((account) => account.name)
+                          .join(", ")}.`
+                      : "Too short. A stronger password is ready."}
+                  </p>
+                </div>
+              )}
+              {selectedAccount.status !== "safe" && (
+                <Button onClick={() => openFix(selectedAccount)}>
+                  <Sparkles size={17} />
+                  Fix password
+                  <ArrowRight size={17} className="button-end" />
+                </Button>
+              )}
+              <Button
+                secondary
+                className={
+                  selectedAccount.status !== "safe" ? "detail-back-button" : ""
+                }
+                onClick={() => setOverlay(null)}
+              >
                 <ArrowLeft size={16} />
                 Back to vault
               </Button>
@@ -1229,12 +1347,16 @@ export default function App() {
             <form
               onSubmit={(event) => {
                 event.preventDefault();
-                demo.addAccount(addName, addUsername);
+                if (!addName.trim() || !addUsername.trim()) return;
+                demo.addAccount(addName, addUsername, overlay.password);
                 setOverlay(null);
                 setTab("vault");
                 setQuery("");
                 setAttentionOnly(false);
-                setToast("Demo account added with a unique password");
+                setToast({
+                  message: "Demo account added with a unique password",
+                  type: "success",
+                });
               }}
             >
               <h2 className="add-title">One account. One password.</h2>
@@ -1263,28 +1385,37 @@ export default function App() {
                 maxLength={100}
                 onChange={(event) => setAddUsername(event.target.value)}
               />
-              <div className="safe-defaults-note add-default">
-                <Sparkles size={18} />
-                <div>
-                  <strong>Unique password included</strong>
-                  <p>Generated automatically. No extra step.</p>
-                </div>
+              <div className="add-password">
+                <PasswordField
+                  password={overlay.password}
+                  label="GENERATED PASSWORD"
+                  onCopy={(password, masked) => void copy(password, masked)}
+                  onRegenerate={() => {
+                    setToast(null);
+                    setOverlay({
+                      kind: "add",
+                      password: generateDemoPassword(),
+                    });
+                  }}
+                />
+                <p className="new-password-note">
+                  <ShieldCheck size={14} />
+                  Strong and unique. Ready to save.
+                </p>
               </div>
-              <Button type="submit">
+              <Button
+                type="submit"
+                disabled={!addName.trim() || !addUsername.trim()}
+              >
                 <Plus size={17} />
                 Add to demo vault
               </Button>
               <p className="sheet-demo-note">
-                Session only. Nothing is stored.
+                Demo vault only. Cleared on refresh.
               </p>
             </form>
           )}
-          {toast && (
-            <div className="sheet-toast" role="status">
-              <CheckCheck size={16} />
-              {toast}
-            </div>
-          )}
+          {toast && <Toast toast={toast} inSheet />}
         </Modal>
       )}
     </div>

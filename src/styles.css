@@ -1493,7 +1493,7 @@ h2 {
   background: #1b202a;
   border-radius: 10px;
 }
-.password-box > .eyebrow {
+.password-label .eyebrow {
   font-size: 8px;
   letter-spacing: 1.1px;
   color: #aaa1b2;
@@ -1515,8 +1515,8 @@ h2 {
   user-select: all;
 }
 .password-line .icon-button {
-  min-width: 27px;
-  height: 30px;
+  min-width: 36px;
+  height: 36px;
 }
 .new-password-note {
   display: flex;
@@ -1863,4 +1863,127 @@ h2 {
   position: absolute;
   left: 7px;
   top: 11px;
+}
+
+/* Shared compact password controls and account details. */
+.password-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 20px;
+}
+.password-label .icon-button {
+  height: 28px;
+  min-width: 36px;
+  margin: -4px 0;
+}
+.password-line code {
+  min-height: 20px;
+}
+.add-password {
+  margin-top: 20px;
+}
+.add-password .new-password-note {
+  margin: 10px 0 22px;
+}
+.detail-status-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 11px;
+  line-height: 1.5;
+  padding: 17px 0 21px;
+}
+.detail-status-note svg {
+  margin-top: 1px;
+}
+.detail-back-button {
+  margin-top: 10px;
+}
+.button:disabled {
+  opacity: 0.45;
+  box-shadow: none;
+}
+.button:disabled:hover {
+  background: #ab329f;
+}
+.toast-error {
+  color: #efc1c8;
+  background: #38242c;
+  border-color: #78515a;
+}
+.toast-error svg {
+  color: #e99ba9;
+}
+.account-monogram {
+  font-family: "Manrope Variable", sans-serif;
+  font-size: 19px;
+  font-weight: 800;
+}
+.icon-microsoft {
+  color: #bdd2d5;
+  background: #202e32;
+  border-color: #34454b;
+}
+.microsoft-mark {
+  display: grid;
+  grid-template-columns: repeat(2, 8px);
+  gap: 2px;
+}
+.microsoft-mark span {
+  width: 8px;
+  height: 8px;
+  background: #c79283;
+}
+.microsoft-mark span:nth-child(2) {
+  background: #9cad83;
+}
+.microsoft-mark span:nth-child(3) {
+  background: #82a7bd;
+}
+.microsoft-mark span:nth-child(4) {
+  background: #c9b380;
+}
+.icon-discord {
+  color: #b2afe0;
+  background: #29263e;
+  border-color: #46415d;
+}
+.icon-netflix {
+  color: #de8b97;
+  background: #322027;
+  border-color: #50313a;
+}
+.icon-instagram {
+  color: #d6a0c6;
+  background: #342432;
+  border-color: #50354a;
+}
+.icon-reddit {
+  color: #d9ac8c;
+  background: #332921;
+  border-color: #514031;
+}
+.icon-steam {
+  color: #9ebed1;
+  background: #1d2d38;
+  border-color: #314452;
+}
+.icon-canvas {
+  color: #d2a890;
+  background: #322820;
+  border-color: #514034;
+}
+.icon-generic {
+  color: #c5bdd0;
+  background: #292631;
+  border-color: #413a4c;
+}
+.fix-account-heading > div {
+  min-width: 0;
+  flex: 1;
+}
+.fix-account-heading h2,
+.success-content > h2 {
+  overflow-wrap: anywhere;
 }

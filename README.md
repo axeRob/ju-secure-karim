@@ -28,7 +28,11 @@ Browser checks use `/usr/bin/chromium` in this cloud environment. Set `PLAYWRIGH
 3. Contextual warning → **Use unique password**.
 4. Immediate success → **Back to vault**.
 
-Spotify and Google initially share a fictional password. Fixing Spotify clears both reuse warnings, leaving GitHub’s weak-password issue. Security also offers direct fixes. Search, safe-account details, Generator, Settings, an empty-vault path and adding fictional accounts work independently.
+The demo starts with 12 fictional student accounts: 6 safe, 4 reused and 2 weak. Spotify and Google share one password; Discord and Netflix share another. GitHub and Reddit have weak passwords.
+
+Fixing Spotify clears both its and Google’s reuse warnings, updating the counts to 8 safe, 2 reused and 2 weak. GitHub remains the next recommended fix. Security offers the same direct fixes.
+
+Every account opens details with its current password masked by default, show/hide, copy and security status. Add Account prepares a unique password before saving, with the same controls and optional regeneration; the exact previewed password is saved. Search, Generator, Settings and the empty-vault path work independently.
 
 ## Demo boundaries
 
