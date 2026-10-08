@@ -11,7 +11,7 @@ npm ci --cache /tmp/ju-secure-npm-cache
 npm run dev
 ```
 
-Vite listens on port 5173 by default. The interface is designed around 390 × 844 px and presents a centered app on larger screens.
+Vite listens on port 5173 by default. Open the `/ju-secure-karim/` path printed by Vite. The interface is designed around 390 × 844 px and presents a centered app on larger screens.
 
 ```sh
 npm run build       # TypeScript check and production build
@@ -43,3 +43,11 @@ All accounts and passwords are fictional. State exists only in React memory, so 
 - `tests/prototype.spec.ts`: browser checks for the main flow and supporting interactions.
 
 Fonts are bundled locally; no font service or API credentials are required. This repository is separate from the Emma prototype.
+
+## GitHub Pages
+
+The Vite base path is `/ju-secure-karim/`. `.github/workflows/deploy-pages.yml` installs locked dependencies with Node 24, builds the app, and deploys `dist/` to GitHub Pages on every push to `main`. It can also be run manually.
+
+In [repository Settings → Pages](https://github.com/axeRob/ju-secure-karim/settings/pages), choose **Build and deployment → Source → GitHub Actions**. A branch or `/docs` folder is not required. If the first workflow run failed before Pages was enabled, open **Actions → Deploy to GitHub Pages → Run workflow**, select `main`, and run it again.
+
+After the workflow succeeds, the site will be available at **https://axerob.github.io/ju-secure-karim/**. No custom secrets are required; deployment uses GitHub's workflow token and OIDC permissions.

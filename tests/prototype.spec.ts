@@ -6,7 +6,7 @@ const accountRow = (page: Page, name: string) =>
   page.locator(".account-list").getByRole("button", { name: new RegExp(name) });
 
 async function importDemo(page: Page) {
-  await page.goto("/");
+  await page.goto("./");
   await page.getByRole("button", { name: "Import demo accounts" }).click();
   await expect(
     page.getByRole("heading", { name: "Vault", exact: true }),
@@ -16,7 +16,7 @@ async function importDemo(page: Page) {
 test("quick start opens a populated demo vault with safe defaults", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("./");
   await expect(
     page.getByRole("heading", { name: /Quick start/ }),
   ).toBeVisible();
@@ -205,7 +205,7 @@ test("navigation offers direct security and generator actions and preserves fixe
 test("empty vault can add a fictional account with an automatic unique password", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("./");
   await page.getByRole("button", { name: "Start with an empty vault" }).click();
   await expect(
     page.getByRole("heading", { name: "A fresh start." }),
@@ -234,7 +234,7 @@ test("empty vault can add a fictional account with an automatic unique password"
 });
 
 test("empty vault can load the research demo data", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("./");
   await page.getByRole("button", { name: "Start with an empty vault" }).click();
   await page.getByRole("button", { name: "Load demo accounts" }).click();
   await expect(page.locator(".account-list").getByRole("button")).toHaveCount(

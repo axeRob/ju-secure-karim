@@ -13,7 +13,7 @@ export default defineConfig({
   expect: { timeout: 5_000 },
   reporter: "list",
   use: {
-    baseURL: "http://127.0.0.1:5173",
+    baseURL: "http://127.0.0.1:5173/ju-secure-karim/",
     viewport: { width: 390, height: 844 },
     browserName: "chromium",
     launchOptions: {
@@ -25,7 +25,7 @@ export default defineConfig({
   },
   webServer: {
     command: "npm run dev -- --port 5173",
-    url: "http://127.0.0.1:5173",
+    url: "http://127.0.0.1:5173/ju-secure-karim/",
     reuseExistingServer: true,
     timeout: 30_000,
   },
