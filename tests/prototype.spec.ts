@@ -768,3 +768,133 @@ for (const width of [320, 390, 1440]) {
     ).toBeInViewport();
   });
 }
+
+for (const viewport of [
+  { width: 320, height: 640 },
+  { width: 390, height: 844 },
+  { width: 430, height: 932 },
+  { width: 1440, height: 1000 },
+]) {
+  test(`every screen stays in the shared phone frame at ${viewport.width}×${viewport.height}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(viewport);
+    await page.goto("./");
+    const shell = page.locator(".app-shell");
+    const checkFrame = async () => {
+      const frame = (await shell.boundingBox())!;
+      expect(frame.width).toBeCloseTo(Math.min(390, viewport.width), 0);
+      expect(frame.x).toBeCloseTo((viewport.width - frame.width) / 2, 0);
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth > innerWidth,
+      );
+      expect(overflow).toBe(false);
+      return frame;
+    };
+    const checkSheet = async () => {
+      const frame = await checkFrame();
+      const dialog = page.getByRole("dialog");
+      await expect(dialog).toBeVisible();
+      const bounds = (await dialog.boundingBox())!;
+      expect(bounds.x).toBeGreaterThanOrEqual(frame.x - 1);
+      expect(bounds.x + bounds.width).toBeLessThanOrEqual(
+        frame.x + frame.width + 1,
+      );
+      expect(bounds.width).toBeGreaterThanOrEqual(frame.width - 3);
+      expect(bounds.y).toBeGreaterThanOrEqual(frame.y - 1);
+      expect(bounds.y + bounds.height).toBeLessThanOrEqual(
+        frame.y + frame.height + 1,
+      );
+      expect(
+        await dialog.evaluate((el) => el.scrollWidth > el.clientWidth),
+      ).toBe(false);
+    };
+    await checkFrame(); // Quick Start
+    await page.getByRole("button", { name: "Import demo accounts" }).click();
+    await checkFrame(); // Vault
+    const navBefore = (await navigation(page).boundingBox())!;
+    await accountRow(page, "Canvas").scrollIntoViewIfNeeded();
+    await expect(accountRow(page, "Canvas")).toBeInViewport();
+    expect((await navigation(page).boundingBox())!.y).toBeCloseTo(
+      navBefore.y,
+      0,
+    );
+    for (const tab of ["Security", "Generator", "Settings", "Vault"]) {
+      await navigation(page)
+        .getByRole("button", { name: tab, exact: true })
+        .click();
+      await checkFrame();
+      const main = (await page.getByRole("main").boundingBox())!;
+      const nav = (await navigation(page).boundingBox())!;
+      expect(main.y + main.height).toBeLessThanOrEqual(nav.y + 1);
+      await expect(navigation(page)).toBeInViewport();
+    }
+    await accountRow(page, "Spotify").click();
+    await checkSheet(); // Account Details
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: "Back to vault", exact: true })
+      .click();
+    await page
+      .getByRole("button", { name: "Add demo account", exact: true })
+      .click();
+    await checkSheet(); // Add Account
+    await page.getByLabel("Website or app").fill("Demo Campus App");
+    await page.getByLabel("Email / username").fill("karim@example.com");
+    const save = page.getByRole("button", { name: "Add to demo vault" });
+    await save.scrollIntoViewIfNeeded();
+    await expect(save).toBeInViewport();
+    await page.getByRole("button", { name: "Close dialog" }).click();
+    await page
+      .getByRole("button", { name: "Fix Spotify password", exact: true })
+      .click();
+    await checkSheet(); // Quick Fix
+    const fix = page.getByRole("button", { name: "Use unique password" });
+    await fix.scrollIntoViewIfNeeded();
+    await expect(fix).toBeInViewport();
+    await fix.click();
+    await checkSheet(); // Success
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: "Back to vault", exact: true })
+      .click();
+    await expectCounts(page, 8, 2, 2);
+  });
+}
+
+test("open sheets follow the phone when the available viewport changes", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await importDemo(page);
+  await page
+    .getByRole("button", { name: "Add demo account", exact: true })
+    .click();
+  await page.getByLabel("Website or app").fill("Demo Notes");
+  await page.getByLabel("Email / username").fill("karim@example.com");
+  for (const size of [
+    { width: 390, height: 480 },
+    { width: 390, height: 844 },
+    { width: 1440, height: 1000 },
+  ]) {
+    await page.setViewportSize(size);
+    await expect
+      .poll(async () => {
+        const shell = (await page.locator(".app-shell").boundingBox())!;
+        const dialog = (await page.getByRole("dialog").boundingBox())!;
+        return (
+          Math.abs(dialog.x - shell.x) < 2 &&
+          dialog.width <= shell.width &&
+          dialog.y >= shell.y &&
+          dialog.y + dialog.height <= shell.y + shell.height + 1
+        );
+      })
+      .toBe(true);
+    await expect(page.getByLabel("Website or app")).toHaveValue("Demo Notes");
+    const save = page.getByRole("button", { name: "Add to demo vault" });
+    await save.scrollIntoViewIfNeeded();
+    await expect(save).toBeInViewport();
+  }
+  await page.getByRole("button", { name: "Add to demo vault" }).click();
+  await expect(accountRow(page, "Demo Notes")).toHaveCount(1);
+});

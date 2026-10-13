@@ -114,9 +114,9 @@ button {
   display: inline-block;
 }
 .app-shell {
-  width: 414px;
+  width: min(390px, 100%);
   height: min(844px, calc(100dvh - 108px));
-  min-height: 630px;
+  min-height: 0;
   background: var(--bg);
   border: 1px solid #34313f;
   border-radius: 28px;
@@ -184,9 +184,11 @@ button {
   border: 1px solid #50304f;
 }
 .app-main {
+  min-height: 0;
+  overscroll-behavior-y: contain;
   overflow: auto;
   flex: 1;
-  padding: 11px 24px 26px;
+  padding: 12px 24px 26px;
   scrollbar-width: thin;
   scrollbar-color: #34313e transparent;
 }
@@ -924,8 +926,8 @@ h2 {
   min-height: 44px;
 }
 .bottom-nav {
-  height: 77px;
-  min-height: 77px;
+  height: 76px;
+  min-height: 76px;
   padding: 9px 14px 14px;
   background: #11141c;
   border-top: 1px solid #292b37;
@@ -1403,10 +1405,17 @@ h2 {
 .sheet {
   padding: 0;
   border: 1px solid #49404e;
-  border-radius: 22px;
-  width: calc(100% - 32px);
-  max-width: 392px;
-  max-height: calc(100dvh - 40px);
+  border-radius: 23px 23px 27px 27px;
+  position: fixed;
+  margin: 0;
+  left: var(--sheet-left);
+  top: var(--sheet-bottom);
+  bottom: auto;
+  transform: translateY(-100%);
+  width: var(--sheet-width);
+  max-width: var(--sheet-width);
+  max-height: var(--sheet-height);
+  overscroll-behavior-y: contain;
   overflow: auto;
   color: #eeeaf3;
   background: #141820;
@@ -1669,6 +1678,10 @@ h2 {
   }
 }
 @media (max-width: 520px) {
+  .sheet {
+    border-radius: 23px 23px 0 0;
+    border-bottom: 0;
+  }
   .stage {
     padding: 0;
     min-height: 100dvh;
@@ -1679,7 +1692,7 @@ h2 {
     display: none;
   }
   .app-shell {
-    width: 100%;
+    width: min(390px, 100%);
     height: 100dvh;
     min-height: 0;
     border: 0;
@@ -1687,45 +1700,17 @@ h2 {
     box-shadow: none;
   }
   .app-header {
-    padding-top: max(20px, env(safe-area-inset-top));
-    min-height: 74px;
-    height: 74px;
+    padding-top: calc(22px + env(safe-area-inset-top));
+    min-height: calc(76px + env(safe-area-inset-top));
+    height: calc(76px + env(safe-area-inset-top));
   }
   .bottom-nav {
-    height: calc(74px + env(safe-area-inset-bottom));
-    min-height: calc(74px + env(safe-area-inset-bottom));
-    padding-bottom: calc(12px + env(safe-area-inset-bottom));
-  }
-  .sheet {
-    margin: auto auto 0;
-    max-width: 100%;
-    width: 100%;
-    border-radius: 23px 23px 0 0;
-    border-bottom: 0;
-    max-height: 92dvh;
+    height: calc(76px + env(safe-area-inset-bottom));
+    min-height: calc(76px + env(safe-area-inset-bottom));
+    padding-bottom: calc(14px + env(safe-area-inset-bottom));
   }
   .sheet-content {
     padding-bottom: calc(23px + env(safe-area-inset-bottom));
-  }
-  .quick-start .welcome-art {
-    margin-top: 12px;
-    height: 158px;
-    margin-bottom: 24px;
-  }
-  .quick-start > h1 {
-    font-size: 40px;
-  }
-  .onboarding-lead {
-    font-size: 25px;
-  }
-  .intro-copy {
-    margin-top: 15px;
-  }
-  .defaults-card {
-    margin-top: 27px;
-  }
-  .app-main {
-    padding-top: 12px;
   }
   .onboarding-main {
     padding-top: 0;
@@ -1734,6 +1719,25 @@ h2 {
     bottom: calc(89px + env(safe-area-inset-bottom));
   }
 }
+/* The same phone-scale spacing at every host viewport width. */
+.quick-start .welcome-art {
+  margin-top: 12px;
+  height: 158px;
+  margin-bottom: 24px;
+}
+.quick-start > h1 {
+  font-size: 40px;
+}
+.onboarding-lead {
+  font-size: 25px;
+}
+.intro-copy {
+  margin-top: 15px;
+}
+.defaults-card {
+  margin-top: 27px;
+}
+
 @media (max-height: 760px) {
   .quick-start .welcome-art {
     height: 107px;

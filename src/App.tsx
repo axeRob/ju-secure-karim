@@ -1,4 +1,11 @@
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type ReactNode,
+  type RefObject,
+} from "react";
 import {
   ArrowDownToLine,
   ArrowLeft,
@@ -179,23 +186,59 @@ function Modal({
   onClose,
   children,
   className = "",
+  containerRef,
 }: {
   title: string;
   onClose: () => void;
   children: ReactNode;
   className?: string;
+  containerRef: RefObject<HTMLDivElement | null>;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   useEffect(() => {
     const element = ref.current!;
+    const container = containerRef.current!;
     const previous = document.activeElement as HTMLElement | null;
+    const syncBounds = () => {
+      const bounds = container.getBoundingClientRect();
+      const viewport = window.visualViewport;
+      const top = Math.max(bounds.top, viewport?.offsetTop ?? 0);
+      const bottom = Math.min(
+        bounds.bottom,
+        (viewport?.offsetTop ?? 0) + (viewport?.height ?? window.innerHeight),
+      );
+      const border =
+        Number.parseFloat(getComputedStyle(container).borderLeftWidth) || 0;
+      element.style.setProperty("--sheet-left", `${bounds.left + border}px`);
+      element.style.setProperty("--sheet-bottom", `${bottom - border}px`);
+      element.style.setProperty(
+        "--sheet-width",
+        `${bounds.width - border * 2}px`,
+      );
+      element.style.setProperty(
+        "--sheet-height",
+        `${Math.max(0, bottom - top - border * 2 - 16)}px`,
+      );
+    };
+    syncBounds();
+    const observer = new ResizeObserver(syncBounds);
+    observer.observe(container);
+    window.addEventListener("resize", syncBounds);
+    window.addEventListener("scroll", syncBounds, { passive: true });
+    window.visualViewport?.addEventListener("resize", syncBounds);
+    window.visualViewport?.addEventListener("scroll", syncBounds);
     element.showModal();
     return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", syncBounds);
+      window.removeEventListener("scroll", syncBounds);
+      window.visualViewport?.removeEventListener("resize", syncBounds);
+      window.visualViewport?.removeEventListener("scroll", syncBounds);
       element.close();
       previous?.focus();
     };
-  }, []);
+  }, [containerRef]);
   return (
     <dialog
       ref={ref}
@@ -324,6 +367,7 @@ export default function App() {
   const [addName, setAddName] = useState("");
   const [addUsername, setAddUsername] = useState("");
   const mainRef = useRef<HTMLElement>(null);
+  const shellRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const pageTitleRef = useRef<HTMLHeadingElement>(null);
 
@@ -437,7 +481,7 @@ export default function App() {
           Karim edition <span className="stage-dot" /> Interactive prototype
         </span>
       </div>
-      <div className="app-shell">
+      <div className="app-shell" ref={shellRef}>
         <header className="app-header">
           <a
             className="brand"
@@ -1154,6 +1198,7 @@ export default function App() {
 
       {overlay && (
         <Modal
+          containerRef={shellRef}
           key={overlay.kind}
           title={
             overlay.kind === "success"
