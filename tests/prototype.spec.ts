@@ -750,7 +750,19 @@ for (const width of [320, 390, 1440]) {
     const content = await page.getByRole("main").boundingBox();
     expect(nav).not.toBeNull();
     expect(content).not.toBeNull();
-    expect(content!.y + content!.height).toBeLessThanOrEqual(nav!.y + 1);
+    const scrollLayout = await page.getByRole("main").evaluate((el) => ({
+      overflow: getComputedStyle(el).overflowY,
+      bottomPadding: Number.parseFloat(getComputedStyle(el).paddingBottom),
+    }));
+    expect(scrollLayout.overflow).toBe("visible");
+    expect(scrollLayout.bottomPadding).toBeGreaterThanOrEqual(nav!.height + 24);
+    await page.evaluate(() =>
+      window.scrollTo(0, document.documentElement.scrollHeight),
+    );
+    await expect(accountRow(page, "Canvas")).toBeInViewport();
+    const lastRow = (await accountRow(page, "Canvas").boundingBox())!;
+    expect(lastRow.y + lastRow.height).toBeLessThanOrEqual(nav!.y);
+    expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
     expect(nav!.y + nav!.height).toBeLessThanOrEqual(844);
     for (const button of await navigation(page).getByRole("button").all()) {
       const box = await button.boundingBox();
@@ -775,16 +787,42 @@ for (const viewport of [
   { width: 430, height: 932 },
   { width: 1440, height: 1000 },
 ]) {
-  test(`every screen stays in the shared phone frame at ${viewport.width}×${viewport.height}`, async ({
+  test(`every screen uses the flat full-height mobile column at ${viewport.width}×${viewport.height}`, async ({
     page,
   }) => {
     await page.setViewportSize(viewport);
     await page.goto("./");
     const shell = page.locator(".app-shell");
-    const checkFrame = async () => {
+    const checkColumn = async () => {
+      await page.evaluate(() => window.scrollTo(0, 0));
       const frame = (await shell.boundingBox())!;
       expect(frame.width).toBeCloseTo(Math.min(390, viewport.width), 0);
       expect(frame.x).toBeCloseTo((viewport.width - frame.width) / 2, 0);
+      expect(frame.y).toBe(0);
+      expect(frame.height).toBeGreaterThanOrEqual(
+        Math.max(844, viewport.height),
+      );
+      const outer = await shell.evaluate((el) => {
+        const styles = getComputedStyle(el);
+        const stage = getComputedStyle(document.querySelector(".stage")!);
+        return {
+          radius: styles.borderRadius,
+          border: styles.borderWidth,
+          shadow: styles.boxShadow,
+          stagePadding: stage.padding,
+          stageImage: stage.backgroundImage,
+          stageColor: stage.backgroundColor,
+        };
+      });
+      expect(outer).toEqual({
+        radius: "0px",
+        border: "0px",
+        shadow: "none",
+        stagePadding: "0px",
+        stageImage: "none",
+        stageColor: "rgb(8, 10, 14)",
+      });
+      await expect(page.locator(".stage-label, .stage-footer")).toHaveCount(0);
       const overflow = await page.evaluate(
         () => document.documentElement.scrollWidth > innerWidth,
       );
@@ -792,7 +830,7 @@ for (const viewport of [
       return frame;
     };
     const checkSheet = async () => {
-      const frame = await checkFrame();
+      const frame = await checkColumn();
       const dialog = page.getByRole("dialog");
       await expect(dialog).toBeVisible();
       const bounds = (await dialog.boundingBox())!;
@@ -809,9 +847,9 @@ for (const viewport of [
         await dialog.evaluate((el) => el.scrollWidth > el.clientWidth),
       ).toBe(false);
     };
-    await checkFrame(); // Quick Start
+    await checkColumn(); // Quick Start: flat outer page on every viewport
     await page.getByRole("button", { name: "Import demo accounts" }).click();
-    await checkFrame(); // Vault
+    await checkColumn(); // Vault
     const navBefore = (await navigation(page).boundingBox())!;
     await accountRow(page, "Canvas").scrollIntoViewIfNeeded();
     await expect(accountRow(page, "Canvas")).toBeInViewport();
@@ -823,10 +861,18 @@ for (const viewport of [
       await navigation(page)
         .getByRole("button", { name: tab, exact: true })
         .click();
-      await checkFrame();
-      const main = (await page.getByRole("main").boundingBox())!;
+      await checkColumn();
       const nav = (await navigation(page).boundingBox())!;
-      expect(main.y + main.height).toBeLessThanOrEqual(nav.y + 1);
+      expect(nav.y + nav.height).toBeCloseTo(viewport.height, 0);
+      expect(
+        await navigation(page).evaluate((el) => getComputedStyle(el).position),
+      ).toBe("fixed");
+      const mainStyle = await page.getByRole("main").evaluate((el) => ({
+        overflow: getComputedStyle(el).overflowY,
+        padding: Number.parseFloat(getComputedStyle(el).paddingBottom),
+      }));
+      expect(mainStyle.overflow).toBe("visible");
+      expect(mainStyle.padding).toBeGreaterThanOrEqual(nav.height + 24);
       await expect(navigation(page)).toBeInViewport();
     }
     await accountRow(page, "Spotify").click();
@@ -862,7 +908,7 @@ for (const viewport of [
   });
 }
 
-test("open sheets follow the phone when the available viewport changes", async ({
+test("open sheets follow the mobile column and visible viewport on resize", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });

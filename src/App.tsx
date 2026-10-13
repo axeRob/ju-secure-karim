@@ -377,7 +377,7 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [toast]);
   useEffect(() => {
-    mainRef.current?.scrollTo({ top: 0 });
+    window.scrollTo({ top: 0, behavior: "instant" });
   }, [tab, demo.initialized]);
   useEffect(() => {
     const focusSearch = (event: KeyboardEvent) => {
@@ -457,7 +457,10 @@ export default function App() {
     setTab("vault");
     setQuery("");
     setAttentionOnly(false);
-    setTimeout(() => pageTitleRef.current?.focus(), 50);
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: "instant" });
+      pageTitleRef.current?.focus({ preventScroll: true });
+    }, 50);
   };
   const regenerate = (
     newLength = length,
@@ -475,12 +478,6 @@ export default function App() {
 
   return (
     <div className="stage">
-      <div className="stage-label">
-        <span>JU SECURE</span>
-        <span>
-          Karim edition <span className="stage-dot" /> Interactive prototype
-        </span>
-      </div>
       <div className="app-shell" ref={shellRef}>
         <header className="app-header">
           <a
@@ -1192,10 +1189,6 @@ export default function App() {
         )}
         {toast && !overlay && <Toast toast={toast} />}
       </div>
-      <p className="stage-footer">
-        <span className="stage-dot" />A faster path to a safer vault.
-      </p>
-
       {overlay && (
         <Modal
           containerRef={shellRef}

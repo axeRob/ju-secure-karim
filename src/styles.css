@@ -1,7 +1,7 @@
 :root {
   font-family: "DM Sans Variable", sans-serif;
   color: #f2f1f6;
-  background: #171622;
+  background: #080a0e;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -74,68 +74,15 @@ button {
 }
 .stage {
   min-height: 100dvh;
-  background: radial-gradient(
-    ellipse at 50% 38%,
-    #252235 0%,
-    #1a1927 45%,
-    #161620 100%
-  );
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 24px 20px 18px;
-}
-.stage-label {
-  width: min(100%, 930px);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 10px;
-  letter-spacing: 2px;
-  color: #858397;
-  margin-bottom: 18px;
-}
-.stage-label > span:first-child {
-  font-weight: 700;
-  color: #bab7c9;
-  letter-spacing: 3px;
-}
-.stage-label > span:last-child {
-  letter-spacing: 0.5px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.stage-dot {
-  width: 4px;
-  height: 4px;
-  background: #a369a3;
-  border-radius: 50%;
-  display: inline-block;
+  background: #080a0e;
 }
 .app-shell {
-  width: min(390px, 100%);
-  height: min(844px, calc(100dvh - 108px));
-  min-height: 0;
+  width: 100%;
+  max-width: 390px;
+  min-height: max(844px, 100dvh);
+  margin-inline: auto;
   background: var(--bg);
-  border: 1px solid #34313f;
-  border-radius: 28px;
-  display: flex;
-  flex-direction: column;
   position: relative;
-  overflow: hidden;
-  box-shadow:
-    0 22px 80px #05050d60,
-    0 0 0 5px #0d0e161c;
-}
-.stage-footer {
-  font-size: 10px;
-  letter-spacing: 1px;
-  color: #767388;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 16px;
 }
 .app-header {
   height: 76px;
@@ -184,13 +131,10 @@ button {
   border: 1px solid #50304f;
 }
 .app-main {
-  min-height: 0;
-  overscroll-behavior-y: contain;
-  overflow: auto;
-  flex: 1;
-  padding: 12px 24px 26px;
-  scrollbar-width: thin;
-  scrollbar-color: #34313e transparent;
+  padding: 12px 24px calc(76px + 26px + env(safe-area-inset-bottom));
+}
+.app-main.onboarding-main {
+  padding-bottom: calc(26px + env(safe-area-inset-bottom));
 }
 .page-enter {
   animation: enter 0.24s ease-out;
@@ -926,6 +870,11 @@ h2 {
   min-height: 44px;
 }
 .bottom-nav {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: min(100%, 390px);
   height: 76px;
   min-height: 76px;
   padding: 9px 14px 14px;
@@ -971,10 +920,12 @@ h2 {
   color: #d397cc;
 }
 .toast {
-  position: absolute;
+  position: fixed;
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+  width: min(calc(100% - 32px), 358px);
   bottom: 91px;
-  left: 16px;
-  right: 16px;
   z-index: 7;
   display: flex;
   align-items: center;
@@ -986,7 +937,7 @@ h2 {
   box-shadow: 0 6px 30px #0006;
   color: #dcebe5;
   font-size: 11px;
-  animation: enter 0.2s ease-out;
+  animation: toast-enter 0.2s ease-out;
   pointer-events: none;
 }
 .toast svg {
@@ -1405,7 +1356,8 @@ h2 {
 .sheet {
   padding: 0;
   border: 1px solid #49404e;
-  border-radius: 23px 23px 27px 27px;
+  border-radius: 23px 23px 0 0;
+  border-bottom: 0;
   position: fixed;
   margin: 0;
   left: var(--sheet-left);
@@ -1667,6 +1619,16 @@ h2 {
 .add-default p {
   font-size: 10px;
 }
+@keyframes toast-enter {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 5px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
 @keyframes enter {
   from {
     opacity: 0;
@@ -1678,27 +1640,6 @@ h2 {
   }
 }
 @media (max-width: 520px) {
-  .sheet {
-    border-radius: 23px 23px 0 0;
-    border-bottom: 0;
-  }
-  .stage {
-    padding: 0;
-    min-height: 100dvh;
-    background: var(--bg);
-  }
-  .stage-label,
-  .stage-footer {
-    display: none;
-  }
-  .app-shell {
-    width: min(390px, 100%);
-    height: 100dvh;
-    min-height: 0;
-    border: 0;
-    border-radius: 0;
-    box-shadow: none;
-  }
   .app-header {
     padding-top: calc(22px + env(safe-area-inset-top));
     min-height: calc(76px + env(safe-area-inset-top));
@@ -1755,9 +1696,6 @@ h2 {
   }
   .intro-copy {
     margin-top: 10px;
-  }
-  .app-shell {
-    min-height: 0;
   }
 }
 @media (prefers-reduced-motion: reduce) {
